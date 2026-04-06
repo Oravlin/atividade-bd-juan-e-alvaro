@@ -4,20 +4,20 @@ CREATE DATABASE IF NOT EXISTS empresa
   
 USE empresa;
 
-CREATE TABLE cliente(
+CREATE TABLE if not exists tbcliente(
 id_cliente INT AUTO_INCREMENT PRIMARY KEY,
-nome VARCHAR(100) NOT NULL,
-email VARCHAR(100) UNIQUE,
-ativo TINYINT NOT NULL DEFAULT 1,
-data_cadastro DATETIME DEFAULT CURRENT_TIMESTAMP
+nome_cliente VARCHAR(100) NOT NULL,
+email_cliente VARCHAR(100) UNIQUE,
+ativo_cliente TINYINT NOT NULL DEFAULT 1,
+data_cadastro_cliente DATETIME DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
-CREATE TABLE produto (
+CREATE TABLE if not exists tbproduto (
 id_produto INT AUTO_INCREMENT PRIMARY KEY,
-nome VARCHAR(100) NOT NULL,
-preco DECIMAL(10,2) CHECK (preco > 0),
-qtd_estoque INT DEFAULT 1,
-data_cadastro DATETIME DEFAULT CURRENT_TIMESTAMP
+nome_produto VARCHAR(100) NOT NULL,
+preco_produto DECIMAL(10,2) CHECK (preco_produto > 0),
+qtd_estoque_produto INT DEFAULT 1,
+data_cadastro_produto DATETIME DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
 /*
@@ -30,9 +30,9 @@ data_cadastro DATETIME DEFAULT CURRENT_TIMESTAMP
 
 -- etapa 2
 
-create table categoria(
-	id int auto_increment primary key, 
-    nome varchar(100) unique 
+create table if not exists tbcategoria(
+	id_categoria int auto_increment primary key, 
+    nome_categoria varchar(100) unique 
 ) engine=InnoDB;
 
 /* 6. 
@@ -46,13 +46,24 @@ create table categoria(
 
 -- etapa 3
 
-alter table produto add FKcategoria int not null;
-alter table produto add constraint FkcCategoria foreign key (FKcategoria) references categoria (id) on delete restrict;
+alter table tbproduto add FKcategoria int not null;
+alter table tbproduto add constraint FkcCategoria foreign key (FKcategoria) references tbcategoria (id_categoria) on delete restrict;
 
 /* 
 10) usamos o protocolo de exclusão RESTRICT, porque esse método bloqueia a exclusão de registros que possuem relacionamento
 11) deve-se usar quando é necessário apagar tudo relacionado à tabela pai
 12) quando for necessário a restrição de exclusão ao possuir relacionamento à tabelas filhas
 13) ao usar SET NULL os dados apagados se tornarão NULL, ou seja, será uma substituição
-14) regra no banco se refere 
+14) regra no banco se refere a como o banco irá se portar com os dados inseridos nele, regra na aplicação
+refere-se ao comportamento de dados que seram enviados para o banco
  */
+ 
+ -- criando tabela pedido
+create table if not exists tbpedido(
+	id_pedido int primary key auto_increment,
+    data_pedido timestamp default current_timestamp,
+    valor_pedido decimal(8,2) check (valor_pedido > 0),
+    id_cliente_fk int
+)engine=InnoDB;
+alter table tbpedido add constraint FkCliente foreign key (id_cliente_fk) references tbcliente (id_cliente) on delete cascade;
+
