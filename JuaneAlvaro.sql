@@ -75,5 +75,55 @@ create table if not exists tbpedido_item(
     qtd_pedido int check (qtd_pedido > 0),
     preco_unitario decimal(8,2)
 )engine=InnoDB;
-alter table tbpedido_item add constraint Fkpedido foreign key (id_pedido) references tbpedido (id_pedido);
-alter table tbpedido_item add constraint Fkproduto foreign key (id_produto) references tbproduto (id_produto);
+alter table tbpedido_item add constraint Fkpedido foreign key (id_pedido) references tbpedido (id_pedido) on delete cascade;
+alter table tbpedido_item add constraint Fkproduto foreign key (id_produto) references tbproduto (id_produto) on delete restrict;
+
+
+-- teste de integridade
+insert into tbcliente (nome_cliente, email_cliente) values ("Enildo Candida Santos", "enildoprofessor@email.com");
+insert into tbcliente (nome_cliente, email_cliente) values ("Nivia Professora Basilides", "nivia@email.com");
+insert into tbcliente (nome_cliente, email_cliente) values ("Felipe Mendes Dahmer", "dahmerfelipe@email.com");
+
+-- criando categorias
+insert into tbcategoria (nome_categoria) values ("comidas");
+insert into tbcategoria (nome_categoria) values ("roupas");
+insert into tbcategoria (nome_categoria) values ("brinquedos");
+
+
+-- os produtos são para fazer pedidos válidos
+insert into tbproduto (nome_produto, preco_produto, qtd_estoque_produto, FKcategoria) values ("Maçã", 3.67, 900, 1);
+insert into tbproduto (nome_produto, preco_produto, qtd_estoque_produto, FKcategoria) values ("Banana", 5, 9000, 1);
+insert into tbproduto (nome_produto, preco_produto, qtd_estoque_produto, FKcategoria) values ("Carta Pokémon", 25.63, 35, 3);
+insert into tbproduto (nome_produto, preco_produto, qtd_estoque_produto, FKcategoria) values ("Camiseta", 67.69, 10, 2);
+
+insert into tbpedido (valor_pedido, id_cliente_fk) values (44444, 1);
+insert into tbpedido (valor_pedido, id_cliente_fk) values (7667, 3);
+insert into tbpedido (valor_pedido, id_cliente_fk) values (3.99, 1);
+insert into tbpedido (valor_pedido, id_cliente_fk) values (780.87, 2);
+
+insert into tbpedido_item (id_pedido, id_produto, qtd_pedido, preco_unitario, id_item) values (1, 1, 2, 3.67, 1);
+insert into tbpedido_item (id_pedido, id_produto, qtd_pedido, preco_unitario, id_item) values (4, 3, 99, 25.63, 2);
+insert into tbpedido_item (id_pedido, id_produto, qtd_pedido, preco_unitario, id_item) values (3, 2, 2, 5, 3);
+insert into tbpedido_item (id_pedido, id_produto, qtd_pedido, preco_unitario, id_item) values (2, 4, 5, 67.69, 4);
+
+-- inserindo pedido com cliente inexistente
+insert into tbpedido (valor_pedido, id_cliente_fk) values (780.87, 10);
+-- Explicação: a constraint que faz o relacionamento falha porque não há um cliente que fez esse pedido, e o grau de relacionamento exige que exista um cliente para cada pedido
+
+-- teste de cascade
+delete from tbcliente where id_cliente = 1;
+select * from tbcliente;
+select * from tbpedido;
+select * from tbproduto;
+select * from tbpedido_item;
+
+-- explicação do comportamento: quando se deleta um cliente e há pedidos registrado no nome dele, será apagado tudo referente
+
+
+-- evolução real
+alter table tbpedido add column (desconto_pedido decimal(5,2) check (desconto_pedido >= 0 and desconto_pedido <= 100));
+insert into tbpedido_item (id_pedido, id_produto, qtd_pedido, preco_unitario, id_item, desconto_pedido) values (2, 4, 5, 67.69, 4, 101);
+
+-- etapa mercado
+-- o delete on cascade no pedido item é necessário caso um pedido seja apagado. Porque não há mais necessidade de ter um pedido_item
+-- o restrict impede que os produtos sejam apagados caso um pedido referenciando-os for apagado.
